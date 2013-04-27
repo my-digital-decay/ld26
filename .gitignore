@@ -1,0 +1,6 @@
+# ignore files
+moai-osx-stable
+moai-osx-master
+
+# ignore directories
+src/

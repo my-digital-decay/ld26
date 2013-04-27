@@ -10,10 +10,44 @@ viewport:setScale ( 1280, -720 )
 
 dofile "input.lua"
 
+--
+-- Frontend
+--
+
+--
+-- Backend
+--
+
+--
+-- Font
+--
+
 layer = MOAILayer2D.new ()
 layer:setViewport ( viewport )
 layer:setClearColor (0.2, 0.2, 0.2, 1.0)
 MOAISim.pushRenderPass ( layer )
+
+bitmapFont = MOAIFont.new ()
+bitmapFont:loadFromBMFont ( '../fonts/04b_03bx08.fnt' )
+
+staticTextbox = MOAITextBox.new ()
+staticTextbox:setString ( "0 1 2 3 4 5 6 7 8 9" )
+staticTextbox:setFont ( bitmapFont )
+staticTextbox:setTextSize ( 8 )
+staticTextbox:setRect ( -150, 0, 150, 130 )
+staticTextbox:setAlignment ( MOAITextBox.CENTER_JUSTIFY, MOAITextBox.CENTER_JUSTIFY )
+--staticTextbox:setYFlip ( true )
+layer:insertProp ( staticTextbox )
+
+staticTextbox2 = MOAITextBox.new ()
+staticTextbox2:setString ( "0 1 2 3 4 5 6 7 8 9" )
+staticTextbox2:setFont ( bitmapFont )
+staticTextbox2:setTextSize ( 64 )
+staticTextbox2:setRect ( -150, 130, 150, 260 )
+staticTextbox2:setAlignment ( MOAITextBox.CENTER_JUSTIFY, MOAITextBox.CENTER_JUSTIFY )
+--staticTextbox2:setYFlip ( true )
+layer:insertProp ( staticTextbox2 )
+
 
 --
 -- Quad
@@ -99,4 +133,16 @@ spike:setDeck ( triangleDeck )
 spike:setLoc ( 64.0, 0.0 )
 --lines:setScl ( 10, 10 )
 layer:insertProp ( spike )
+
+--
+-- Main loop
+--
+mainThread = MOAIThread.new ()
+mainThread:run (
+  function ()
+    while true do
+      coroutine.yield ()
+    end
+  end
+)
 
