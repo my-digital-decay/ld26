@@ -1,7 +1,7 @@
 LD26
 ====
 
-Ludum Dare 26 - April 26th-29th - Theme: ???
+Ludum Dare 26 - April 26th-29th - Theme: Minimalism
 
 ### My First Ludum Dare
 
