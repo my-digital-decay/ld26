@@ -1,0 +1,5 @@
+#!/bin/sh
+echo starting ld26-osx
+cd src
+../bin/moai-osx main.lua
+echo thanks for playing!
