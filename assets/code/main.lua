@@ -8,6 +8,7 @@ viewport = MOAIViewport.new ()
 viewport:setSize ( 1280, 720 )
 viewport:setScale ( 1280, -720 )
 
+dofile "utils.lua"
 --dofile "fonts.lua"
 dofile "shapes.lua"
 dofile "player.lua"

@@ -132,10 +132,6 @@ end
 
 SHAPE_MORPH = 4
 
-local function lerp (a, b, t)
-  return a + (b - a) * t
-end
-
 function makeMorphDeck ( index )
 
   printf("makeMorphDeck: %d\n", index)
