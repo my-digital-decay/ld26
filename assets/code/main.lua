@@ -8,6 +8,9 @@ viewport = MOAIViewport.new ()
 viewport:setSize ( 1280, 720 )
 viewport:setScale ( 1280, -720 )
 
+--dofile "fonts.lua"
+dofile "shapes.lua"
+dofile "player.lua"
 dofile "input.lua"
 
 --
@@ -50,89 +53,31 @@ layer:insertProp ( staticTextbox2 )
 
 
 --
--- Quad
---
---[[
-box = MOAIGfxQuad2D.new ()
-box:setTexture ( "square.png" )
---box:setTexture ( "circle.png" )
-box:setRect ( -1, -1, 1, 1 )
-box:setUVRect ( 0, 0, 1, 1 )
-
-player = MOAIProp2D.new ()
-player:setDeck ( box )
-player:setScl ( 10, 10 )
-layer:insertProp ( player )
---]]
-
-
---
--- Squares
---
-
-function square_onDraw ( index, xOff, yOff, xFlip, yFlip )
-  MOAIGfxDevice.setPenColor (0.66, 0.66, 0.33, 1)
-  MOAIGfxDevice.setPenWidth ( 2 )
---  MOAIDraw.drawLine {-16, -16, 16, -16, 16, 16, -16, 16, -16, -16}
-  MOAIDraw.drawRect ( -16, -16, 16, 16 )
-end
-
-squareDeck = MOAIScriptDeck.new ()
---scriptDeck:setTexture ( "moai.png" )
-squareDeck:setRect ( -16, -16, 16, 16 )
-squareDeck:setDrawCallback ( square_onDraw )
-
---
--- Circles
---
-
-function circle_onDraw ( index, xOff, yOff, xFlip, yFlip )
-  MOAIGfxDevice.setPenColor ( 0.33, 0.66, 0.66, 1 )
-  MOAIGfxDevice.setPenWidth ( 2 )
-  MOAIDraw.drawCircle ( 0, 0, 16, 32 )
-end
-
-circleDeck = MOAIScriptDeck.new ()
-circleDeck:setRect ( -16, -16, 16, 16 )
-circleDeck:setDrawCallback ( circle_onDraw )
-
-
---
--- Triangles
---
-
-function triangle_onDraw ( index, xOff, yOff, xFlip, yFlip )
-  MOAIGfxDevice.setPenColor (0.66, 0.33, 0.66, 1)
-  MOAIGfxDevice.setPenWidth ( 2 )
-  MOAIDraw.drawLine {-16, 16, 0, -16, 16, 16, -16, 16}
-end
-
-triangleDeck = MOAIScriptDeck.new ()
-triangleDeck:setRect ( -16, -16, 16, 16 )
-triangleDeck:setDrawCallback ( triangle_onDraw )
-
-
---
 -- Scene
 --
 
-box = MOAIProp2D.new ()
-box:setDeck ( squareDeck )
+box = makeShape ( SHAPE_SQUARE )
 box:setLoc ( -64.0, 0.0 )
---lines:setScl ( 10, 10 )
+box:setScl ( 16, 16 )
+box:setColor ( 0.22, 0.22, 0.5 )
 layer:insertProp ( box )
 
-ball = MOAIProp2D.new ()
-ball:setDeck ( circleDeck )
+ball = makeShape ( SHAPE_CIRCLE )
 ball:setLoc ( 0.0, 0.0 )
---lines:setScl ( 10, 10 )
+ball:setScl ( 16, 16 )
+ball:setColor ( 0.22, 0.5, 0.22 )
 layer:insertProp ( ball )
 
-spike = MOAIProp2D.new ()
-spike:setDeck ( triangleDeck )
+spike = makeShape ( SHAPE_TRIANGLE )
 spike:setLoc ( 64.0, 0.0 )
---lines:setScl ( 10, 10 )
+spike:setScl ( 16, 16 )
+spike:setColor ( 0.5, 0.22, 0.22 )
 layer:insertProp ( spike )
+
+
+time = MOAITimer.new ()
+time:setSpan (0, 100)
+time:start ()
 
 --
 -- Main loop
@@ -141,8 +86,10 @@ mainThread = MOAIThread.new ()
 mainThread:run (
   function ()
     while true do
+--      printf("mainThread: %f\n", time:getTime())
       coroutine.yield ()
     end
   end
 )
 
+player = createPlayer()
