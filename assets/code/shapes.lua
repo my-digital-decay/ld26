@@ -14,6 +14,7 @@ function square_onDraw ( index, xOff, yOff, xFlip, yFlip )
 end
 
 local squareDeck = MOAIScriptDeck.new ()
+squareDeck.shape = SHAPE_SQUARE
 squareDeck:setRect ( -1, -1, 1, 1 )
 squareDeck:setDrawCallback ( square_onDraw )
 squareDeck.morphTargets = {
@@ -36,6 +37,10 @@ squareDeck.morphTargets = {
     0.0, -1.0, -- top (center)
 }
 
+function squareDeck.addFixture ( body, x, y, scale )
+  return body:addRect ( -scale, -scale, scale, scale, 0 )
+end
+
 
 --
 -- Circles
@@ -49,6 +54,7 @@ function circle_onDraw ( index, xOff, yOff, xFlip, yFlip )
 end
 
 local circleDeck = MOAIScriptDeck.new ()
+circleDeck.shape = SHAPE_CIRCLE
 circleDeck:setRect ( -1, -1, 1, 1 )
 circleDeck:setDrawCallback ( circle_onDraw )
 local sect = {
@@ -78,6 +84,11 @@ circleDeck.morphTargets = {
      sect[1],  sect[2],  -- top (center)
 }
 
+function circleDeck.addFixture ( body, x, y, scale )
+  return body:addCircle ( x, y, scale )
+end
+
+
 --
 -- Triangles
 --
@@ -90,7 +101,8 @@ function triangle_onDraw ( index, xOff, yOff, xFlip, yFlip )
 end
 
 local triangleDeck = MOAIScriptDeck.new ()
-triangleDeck:setRect ( -16, -16, 16, 16 )
+triangleDeck.shape = SHAPE_TRIANGLE
+triangleDeck:setRect ( -1, -1, 1, 1 )
 triangleDeck:setDrawCallback ( triangle_onDraw )
 triangleDeck.morphTargets = {
     0.0   , -1.0,   -- top (center)
@@ -112,19 +124,10 @@ triangleDeck.morphTargets = {
     0.0   , -1.0,   -- top (center)
 }
 
-function getShapeDeck ( shape )
-  if ( SHAPE_SQUARE == shape ) then
-    return squareDeck
-  elseif ( SHAPE_CIRCLE == shape ) then
-    return circleDeck
-  elseif ( SHAPE_TRIANGLE == shape ) then
-    return triangleDeck
-  else
-    printf("getShapeDeck - shape error!")
-  end
-
-    return nil
+function triangleDeck.addFixture ( body, x, y, scale )
+  return body:addPolygon {-scale, scale, 0, -scale, scale, scale}
 end
+
 
 --
 -- Morph
@@ -134,12 +137,13 @@ SHAPE_MORPH = 4
 
 function makeMorphDeck ( index )
 
-  printf("makeMorphDeck: %d\n", index)
+--  printf("makeMorphDeck: %d\n", index)
 
   local morphDecks = {}
   morphDecks[index] = MOAIScriptDeck.new ()
 
   local deck = morphDecks[index]
+  deck.shape = SHAPE_MORPH
   deck:setRect ( -1, -1, 1, 1 )
   deck.morphSrc = {}
   deck.morphDest = {}
@@ -178,6 +182,21 @@ function makeMorphDeck ( index )
   return deck
 end
 
+function getShapeDeck ( shape )
+  if ( SHAPE_SQUARE == shape ) then
+    return squareDeck
+  elseif ( SHAPE_CIRCLE == shape ) then
+    return circleDeck
+  elseif ( SHAPE_TRIANGLE == shape ) then
+    return triangleDeck
+  else
+    printf("getShapeDeck - shape error!")
+  end
+
+    return nil
+end
+
+
 --
 -- Make Shape Prop
 --
@@ -186,11 +205,12 @@ local shapeIdx = 1;
 
 function makeShape ( shape )
 
-  printf("makeShape: %d\n", shapeIdx)
+--  printf("makeShape: %d\n", shapeIdx)
 
   s = MOAIProp2D.new ()
   s.shape = shape;
-  s:setDeck ( getShapeDeck ( shape ) )
+  s.deck = getShapeDeck ( shape )
+  s:setDeck ( s.deck )
 
   s:setIndex (shapeIdx)
   shapeIdx = shapeIdx + 1
@@ -204,6 +224,56 @@ function makeShape ( shape )
       self:setDeck ( morphDeck )
       morphDeck:start ()
     end
+  end
+
+  function s:addPhysics ( x, y, scale )
+    self.body = world.b2d:addBody ( MOAIBox2DBody.DYNAMIC, x, y )
+    self.fixtures = {
+      self.deck.addFixture ( self.body, x, y, scale )
+    }
+    self.fixtures[1]:setFriction( 0.4 )
+    self.body:setAngularDamping( 0.6 )
+    self.body:setLinearDamping( 0.4 )
+    self.body:setMassData( 1, 1 )
+--[[
+    s:setAttrLink ( MOAITransform.ATTR_X_LOC, s.body, MOAITransform.ATTR_X_LOC )
+    s:setAttrLink ( MOAITransform.ATTR_Y_LOC, s.body, MOAITransform.ATTR_Y_LOC )
+    s:setAttrLink ( MOAITransform.ATTR_WORLD_Z_LOC, s.body, MOAITransform.ATTR_WORLD_Z_LOC )
+    s:setAttrLink ( MOAITransform.ATTR_WORLD_Z_ROT, s.body, MOAITransform.ATTR_WORLD_Z_ROT )
+--]]
+    self:setParent ( self.body )
+  end
+
+  function s:removePhysics ( )
+    self.body:destroy ()
+  end
+
+  function s:applyLocalForce ( fx, fy, lx, ly )
+    local wx, wy = self.body:getPosition ()
+--    printf ( "LocX: %0.2f, LocY: %0.2f\n", wx+lx, wy+ly )
+    self.body:applyForce ( fx, fy, wx + lx, wy + ly )
+  end
+
+--[[
+  function s:onUpdate ()
+--    local x = self.body:getAttr ( MOAITransform.ATTR_WORLD_X_LOC )
+--    local y = self.body:getAttr ( MOAITransform.ATTR_WORLD_Y_LOC )
+--    self:setLoc ( x, y )
+  end
+--]]
+
+  function s:activate ()
+--[[
+    self.thread = MOAIThread.new ()
+    self.thread:run (
+      function ()
+        while true do
+          self:onUpdate ()
+          coroutine.yield ()
+        end
+      end
+    )
+--]]
   end
 
   return s

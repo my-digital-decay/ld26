@@ -11,25 +11,19 @@ viewport = MOAIViewport.new ()
 viewport:setSize ( SCREEN_WIDTH, SCREEN_HEIGHT )
 viewport:setScale ( SCREEN_WIDTH, -SCREEN_HEIGHT )
 
-dofile "utils.lua"
---dofile "fonts.lua"
-dofile "splash.lua"
-dofile "shapes.lua"
-dofile "player.lua"
+require "utils"
+require "splash"
+require "title"
+require "transition"
+require "world"
+require "shapes"
+require "player"
+
 dofile "input.lua"
-
---
--- Frontend
---
-
---
--- Backend
---
 
 --
 -- Layers
 --
-
 LAYER_BG = 1
 LAYER_PLX_BG1 = 2
 LAYER_PLX_BG2 = 3
@@ -49,13 +43,25 @@ for i = 1, LAYER_TOP do
 end
 
 layer = layers[LAYER_MAIN]
---layers[LAYER_BG]:setClearColor ( 0.2, 0.2, 0.2, 1.0 )
 layers[LAYER_BG]:setClearColor ( 0.0, 0.0, 0.0, 1.0 )
 --layers[LAYER_BG]:setClearDepth ( true )
 
 --
+-- Font
+--
+font = MOAIFont.new ()
+font:loadFromBMFont ( '../fonts/04b_03bx08.fnt' )
+
+
+--
 -- Main loop
 --
+
+GAME_STATE_FRONTEND = 0
+GAME_STATE_BACKEND = 1
+GAME_STATE_QUIT = 2
+game_state = GAME_STATE_FRONTEND
+game_state_new = GAME_STATE_FRONTEND
 
 loop = true
 function main ()
@@ -63,59 +69,57 @@ function main ()
   splashScreen ()
 
   layers[LAYER_BG]:setClearColor ( 0.2, 0.2, 0.2, 1.0 )
-  player = createPlayer()
+  titleScreen ()
+  do
+    local transition = makeTransition( TRANSITION_FADE_OUT )
+    transition:setColor ( 0,0,0,1 )
+    transition:start ( layers[LAYER_TOP], 0.8 )
+  end
+--  layers[LAYER_MAIN]:clear ()
 
   --
-  -- Font
+  -- Game Loop
   --
+  local done = false
+  while not done do
+--    printf ("mainThread:main - %d\n", game_state)
+    if game_state_new ~= game_state then
+      if GAME_STATE_FRONTEND == game_state_new then
+        if GAME_STATE_BACKEND == game_state then
+          player:clear ()
+          world:stop ()
+          world:clear ()
+          layers[LAYER_HUD]:clear ()
+        end
+        titleScreen ()
+      elseif GAME_STATE_BACKEND == game_state_new then
+        layers[LAYER_MAIN]:clear ()
+        world = makeWorld ()
 
-  font = MOAIFont.new ()
-  font:loadFromBMFont ( '../fonts/04b_03bx08.fnt' )
+        levelText = MOAITextBox.new ()
+        levelText:setString ( string.format("%d", world.level_id) )
+        levelText:setFont ( font )
+        levelText:setColor ( 0.9, 0.9, 0.9, 1.0 )
+        levelText:setTextSize ( 64 )
+        levelText:setRect ( -64, -162, 64, -98 )
+        levelText:setAlignment ( MOAITextBox.CENTER_JUSTIFY, MOAITextBox.CENTER_JUSTIFY )
+        --levelText:setYFlip ( true )
+        layers[LAYER_HUD]:insertProp ( levelText )
 
-  staticTextbox = MOAITextBox.new ()
-  staticTextbox:setString ( "0 1 2 3 4 5 6 7 8 9" )
-  staticTextbox:setFont ( font )
-  staticTextbox:setTextSize ( 8 )
-  staticTextbox:setRect ( -150, 0, 150, 130 )
-  staticTextbox:setAlignment ( MOAITextBox.CENTER_JUSTIFY, MOAITextBox.CENTER_JUSTIFY )
-  --staticTextbox:setYFlip ( true )
-  layer:insertProp ( staticTextbox )
+        player = createPlayer (SHAPE_SQUARE)
 
-  staticTextbox2 = MOAITextBox.new ()
-  staticTextbox2:setString ( "0 1 2 3 4 5 6 7 8 9" )
-  staticTextbox2:setFont ( font )
-  staticTextbox2:setTextSize ( 64 )
-  staticTextbox2:setRect ( -150, 130, 150, 260 )
-  staticTextbox2:setAlignment ( MOAITextBox.CENTER_JUSTIFY, MOAITextBox.CENTER_JUSTIFY )
-  --staticTextbox2:setYFlip ( true )
-  layer:insertProp ( staticTextbox2 )
+        world:start ()
+      elseif GAME_STATE_QUIT == game_state_new then
+        done = true
+      end
+      game_state = game_state_new
+    end
 
-  --
-  -- Scene
-  --
-
-  box = makeShape ( SHAPE_SQUARE )
-  box:setLoc ( -64.0, 0.0 )
-  box:setScl ( 16, 16 )
-  box:setColor ( 0.22, 0.22, 0.5 )
-  layer:insertProp ( box )
-
-  ball = makeShape ( SHAPE_CIRCLE )
-  ball:setLoc ( 0.0, 0.0 )
-  ball:setScl ( 16, 16 )
-  ball:setColor ( 0.22, 0.5, 0.22 )
-  layer:insertProp ( ball )
-
-  spike = makeShape ( SHAPE_TRIANGLE )
-  spike:setLoc ( 64.0, 0.0 )
-  spike:setScl ( 16, 16 )
-  spike:setColor ( 0.5, 0.22, 0.22 )
-  layer:insertProp ( spike )
-
-  while loop do
---      printf("mainThread: %f\n", time:getTime())
     coroutine.yield ()
   end
+
+  printf ("exit\n")
+  os.exit ()
 end
 
 mainThread = MOAIThread.new ()
