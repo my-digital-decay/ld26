@@ -25,4 +25,8 @@ Added a MOAI splash screen
 
 I got a basic frmaework with proper frontend and backend states. The backend has a Box2D based physics world and the player object is a physics object in that world. Still no real gameplay or proper player mechanics. Pressing the [SPACE] key will jump (fly if repeatedly pressed)
 
+### Complete
+
+Well I didn't make a game but I'm much more familiar with Lua and MOAI now. And I had fun working on this.
+
 ###### Copyright © 2013 Keith W. Thompson. Some Rights Reserved.
