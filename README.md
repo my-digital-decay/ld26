@@ -21,4 +21,8 @@ Finally got shape drawing and morphing working they way I envisioned. Took way l
 
 Added a MOAI splash screen
 
+### 2 hours left
+
+I got a basic frmaework with proper frontend and backend states. The backend has a Box2D based physics world and the player object is a physics object in that world. Still no real gameplay or proper player mechanics. Pressing the [SPACE] key will jump (fly if repeatedly pressed)
+
 ###### Copyright © 2013 Keith W. Thompson. Some Rights Reserved.
