@@ -24,7 +24,7 @@ function makeWorld ()
   ground.fixtures = {
       ground.body:addChain( ground.verts )
   }
-  ground.fixtures[1]:setFriction( 0.8 )
+  ground.fixtures[1]:setFriction( 0.5 )
 
   function world:start ()
     self.b2d:start ()
@@ -46,7 +46,7 @@ function makeWorld ()
   end
 
   function world:nextLevel ()
-    -- load levle data
+    -- load level data
     self.loadLevel ( self.level_id + 1 )
   end
 

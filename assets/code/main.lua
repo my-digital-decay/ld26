@@ -118,7 +118,6 @@ function main ()
     coroutine.yield ()
   end
 
-  printf ("exit\n")
   os.exit ()
 end
 

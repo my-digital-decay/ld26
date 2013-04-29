@@ -128,6 +128,56 @@ function triangleDeck.addFixture ( body, x, y, scale )
   return body:addPolygon {-scale, scale, 0, -scale, scale, scale}
 end
 
+--
+-- Line strip
+--
+
+SHAPE_LINE_STRIP = 5
+
+lineDecks = {}
+
+function makeLineStrip ( index )
+
+  lineDecks[index] = MOAIScriptDeck.new ()
+
+  local lineDeck = lineDecks[index]
+  lineDeck.shape = SHAPE_LINE_STRIP
+  lineDeck:setRect ( -1, -1, 1, 1 )
+  lineDeck.lines = {}
+  lineDeck.morphTargets = lineDeck.lines
+  --[[
+  {
+      0.0   , -1.0,   -- top (center)
+      0.1666, -0.6666,
+      0.3333, -0.3333,
+      0.5   ,  0.0,
+      0.6666,  0.3333,
+      0.8333,  0.6666,
+      1.0   ,  1.0,   -- bottom (right)
+      0.5   ,  1.0,
+      0.0   ,  1.0,   -- bottom (center)
+      0.5   ,  1.0,
+    -1.0   ,  1.0,   -- bottom (left)
+    -0.8333,  0.6666,
+    -0.6666,  0.3333,
+    -0.5   ,  0.0,
+    -0.3333, -0.3333,
+    -0.1666, -0.6666,
+      0.0   , -1.0,   -- top (center)
+  }
+  --]]
+
+  function line_onDraw ( index, xOff, yOff, xFlip, yFlip )
+    MOAIGfxDevice.setPenWidth ( 2 )
+    MOAIDraw.drawLine {-1, 1, 0, -1, 1, 1, -1, 1}
+  end
+  lineDeck:setDrawCallback ( line_onDraw )
+
+  function triangleDeck.addFixture ( body, x, y, scale )
+    return lineDeck:addPolygon {-scale, scale, 0, -scale, scale, scale}
+  end
+
+end
 
 --
 -- Morph
@@ -135,11 +185,11 @@ end
 
 SHAPE_MORPH = 4
 
+morphDecks = {}
+
 function makeMorphDeck ( index )
 
 --  printf("makeMorphDeck: %d\n", index)
-
-  local morphDecks = {}
   morphDecks[index] = MOAIScriptDeck.new ()
 
   local deck = morphDecks[index]
@@ -166,17 +216,32 @@ function makeMorphDeck ( index )
   deck:setDrawCallback ( morph_onDraw )
 
   deck.timer = MOAITimer.new ()
-  deck.timer:setSpan (1.0)
-  deck.timer:setSpeed (4)
+  deck.timer:setSpan ( 1.0 )
+--  deck.timer:setSpeed ( 4 )
 
   local curve = MOAIAnimCurve.new ()
   curve:reserveKeys ( 2 )
-  curve:setKey ( 1, 0.0, 0.0 , MOAIEaseType.EASE_OUT )
-  curve:setKey ( 2, 1.0, 1.0, MOAIEaseType.EASE_IN )
+  curve:setKey ( 1, 0.0, 0.0 )
+  curve:setKey ( 2, 1.0, 1.0 )
   deck.timer:setCurve (curve)
 
-  function deck:start ()
+  function deck:start ( time )
+    if nil ~= time then
+      self.timer:setSpeed ( 1.0/time )
+    end
     self.timer:start ()
+  end
+
+  function deck:stop ()
+    self.timer:stop ()
+  end
+
+  function deck:isDone ()
+    return self.timer:isDone ()
+  end
+
+  function deck:isBusy ()
+    return self.timer:isBusy ()
   end
 
   return deck
@@ -209,21 +274,34 @@ function makeShape ( shape )
 
   s = MOAIProp2D.new ()
   s.shape = shape;
+  s.shape_new = shape;
   s.deck = getShapeDeck ( shape )
   s:setDeck ( s.deck )
 
   s:setIndex (shapeIdx)
   shapeIdx = shapeIdx + 1
 
-  function s:morph ( shape )
+  function s:morph ( shape, time )
     if ( self.shape ~= shape ) then
---      printf("s:morph: %d\n", self:getIndex())
+--      printf("s:morph: %d, time %0.2f\n", self:getIndex(), time)
       local morphDeck = makeMorphDeck (self:getIndex())
       morphDeck.morphSrc = getShapeDeck(self.shape).morphTargets
       morphDeck.morphDest = getShapeDeck(shape).morphTargets
-      self:setDeck ( morphDeck )
-      morphDeck:start ()
+      self.deck = morphDeck
+      self:setDeck ( self.deck )
+      morphDeck:start ( time )
+      self.shape = morphDeck.shape;
+      self.shape_new = shape
+      self:activate ()
     end
+  end
+
+  function s:isMorphComplete ()
+    if SHAPE_MORPH == self.shape then
+      return self.deck:isDone ()
+    end
+
+    return true
   end
 
   function s:addPhysics ( x, y, scale )
@@ -245,6 +323,8 @@ function makeShape ( shape )
   end
 
   function s:removePhysics ( )
+    self:setParent ( nil )
+    self.fixtures = {}
     self.body:destroy ()
   end
 
@@ -254,26 +334,34 @@ function makeShape ( shape )
     self.body:applyForce ( fx, fy, wx + lx, wy + ly )
   end
 
---[[
   function s:onUpdate ()
 --    local x = self.body:getAttr ( MOAITransform.ATTR_WORLD_X_LOC )
 --    local y = self.body:getAttr ( MOAITransform.ATTR_WORLD_Y_LOC )
 --    self:setLoc ( x, y )
+
+    while SHAPE_MORPH == self.shape do
+      if self:isMorphComplete () then
+--        self:removePhysics ()
+
+--        printf("  morph complete\n")
+        self.shape = self.shape_new
+        self.deck = getShapeDeck ( self.shape )
+        self:setDeck ( self.deck )
+
+--        self:addPhysics ()
+      else
+        coroutine.yield ()
+      end
+    end
   end
---]]
 
   function s:activate ()
---[[
     self.thread = MOAIThread.new ()
     self.thread:run (
       function ()
-        while true do
           self:onUpdate ()
-          coroutine.yield ()
-        end
       end
     )
---]]
   end
 
   return s
