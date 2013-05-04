@@ -9,7 +9,7 @@ This is the repository for my entry into LD26. Not only is this my first Ludum D
 
 ### Day 1
 
-After struggling to get Moai to do what I wanted, I finally got simple shape outlines to draw as I wanted.
+After struggling to get Moai to do what I wanted, I finally got simple shape outlines to draw.
 
 ![Day 1](http://mydigitaldecay.com/ftp/pics/ld26/ld26_2013-04-27@02.21.06am.png)
 
@@ -23,7 +23,7 @@ Added a MOAI splash screen
 
 ### 2 hours left
 
-I got a basic frmaework with proper frontend and backend states. The backend has a Box2D based physics world and the player object is a physics object in that world. Still no real gameplay or proper player mechanics. Pressing the [SPACE] key will jump (fly if repeatedly pressed)
+I got a basic framework with proper frontend and backend states. The backend has a Box2D based physics world and the player object is a physics object in that world. Still no real gameplay or proper player mechanics. Pressing the [SPACE] key will jump (fly if repeatedly pressed).
 
 ### Complete
 
