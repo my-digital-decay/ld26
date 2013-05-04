@@ -4,3 +4,4 @@ moai-osx-master
 
 # ignore directories
 src/
+dist/

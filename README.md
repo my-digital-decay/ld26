@@ -1,4 +1,4 @@
-LD26
+LD26 - ▢ ◯ △
 ====
 
 Ludum Dare 26 - April 26th-29th - Theme: Minimalism
@@ -28,5 +28,7 @@ I got a basic frmaework with proper frontend and backend states. The backend has
 ### Complete
 
 Well I didn't make a game but I'm much more familiar with Lua and MOAI now. And I had fun working on this.
+
+![PRESS START](http://mydigitaldecay.com/ftp/pics/ld26/ld26_2013-04-28@07.23.27pm.png)
 
 ###### Copyright © 2013 Keith W. Thompson. Some Rights Reserved.
